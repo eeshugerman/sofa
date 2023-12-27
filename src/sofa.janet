@@ -25,6 +25,7 @@
   (array/push (parent-section :children) this-section))
 
 (defn before [thunk]
+  # TODO: throw if already set
   (set ((get-parent-section) :before) thunk))
 
 (defn before-each [thunk]
