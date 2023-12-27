@@ -1,8 +1,8 @@
 (def divider-heavy "================================================================================")
 (def divider-light "--------------------------------------------------------------------------------")
 
-(defn- group/new [description]
-  @{:type 'group
+(defn- section/new [description]
+  @{:type 'section
     :description description
     :children @[]
     :before nil
@@ -11,48 +11,48 @@
     :after-each nil})
 
 # seems we can't have a global dynamic binding
-(var top-group (group/new "<top>"))
+(var top-section (section/new "<top>"))
 
-(defn- get-parent-group []
-  (or (dyn :group) top-group))
+(defn- get-parent-section []
+  (or (dyn :section) top-section))
 
-(defn group [description thunk]
-  (def parent-group (get-parent-group))
-  (def this-group
-    (with-dyns [:group (group/new description)]
+(defn section [description thunk]
+  (def parent-section (get-parent-section))
+  (def this-section
+    (with-dyns [:section (section/new description)]
       (thunk)
-      (dyn :group)))
-  (array/push (parent-group :children) this-group))
+      (dyn :section)))
+  (array/push (parent-section :children) this-section))
 
 (defn before [thunk]
-  (set ((get-parent-group) :before) thunk))
+  (set ((get-parent-section) :before) thunk))
 
 (defn before-each [thunk]
-  (set ((get-parent-group) :before-each) thunk))
+  (set ((get-parent-section) :before-each) thunk))
 
 (defn after [thunk]
-  (set ((get-parent-group) :after) thunk))
+  (set ((get-parent-section) :after) thunk))
 
 (defn after-each [thunk]
-  (set ((get-parent-group) :after-each) thunk))
+  (set ((get-parent-section) :after-each) thunk))
 
 (defn test [description thunk]
   (array/push
-    ((get-parent-group) :children)
+    ((get-parent-section) :children)
     {:type 'test
      :description description
      :thunk thunk}))
 
 
-(defn execute-group [group]
+(defn execute-section [section]
   # TODO: catch errors in hooks?
   # TODO: print output indentation
-  (print (group :description))
-  (when-let [before (group :before)]
+  (print (section :description))
+  (when-let [before (section :before)]
     (before))
   (def children-results
     (map (fn [child]
-           (when-let [before-each (group :before-each)]
+           (when-let [before-each (section :before-each)]
              (before-each))
            (def child-result
              (match child
@@ -65,15 +65,15 @@
                  ([err]
                    (printf "* %s ❌" desc)
                    {:type 'test :description desc :passed false :error err}))
-               {:type 'group}
-               (execute-group child)))
-           (when-let [after-each (group :after-each)]
+               {:type 'section}
+               (execute-section child)))
+           (when-let [after-each (section :after-each)]
              (after-each))
            child-result)
-         (group :children)))
-  (when-let [after (group :after)]
+         (section :children)))
+  (when-let [after (section :after)]
     (after))
-  {:type 'group :description (group :description) :children children-results})
+  {:type 'section :description (section :description) :children children-results})
 
 
 (defn- get-spaces [n]
@@ -89,7 +89,7 @@
         (match child
           {:type 'test :passed true} acc
           {:type 'test :passed false} (array/push acc child)
-          {:type 'group} (array/push acc (filter-failures child))))
+          {:type 'section} (array/push acc (filter-failures child))))
       (array)
       (results :children)))
   (merge results {:children filtered-children}))
@@ -98,7 +98,7 @@
 (defn- print-failures [results depth]
   (def indent (get-spaces (* 2 depth)))
   (match results
-    {:type 'group :description desc :children children}
+    {:type 'section :description desc :children children}
     (do
       (print indent desc)
       (each child children
@@ -116,7 +116,7 @@
       (match child
         {:type 'test :passed true} (merge acc {:passed (+ 1 (acc :passed))})
         {:type 'test :passed false} (merge acc {:failed (+ 1 (acc :failed))})
-        {:type 'group} (let [counts (count-tests child)]
+        {:type 'section} (let [counts (count-tests child)]
                          {:passed (+ (acc :passed) (counts :passed))
                           :failed (+ (acc :failed) (counts :failed))})))
     {:passed 0 :failed 0}
@@ -124,7 +124,7 @@
 
 
 (defn- report [results]
-  # TODO: elide implicit top group
+  # TODO: elide implicit top section
   (print "FAILURES:")
   (print divider-light)
   (print-failures (filter-failures results) 0)
@@ -146,7 +146,7 @@
   (print divider-heavy)
   (print "Running tests...")
   (print divider-light)
-  (def results (execute-group top-group))
+  (def results (execute-section top-section))
   (print divider-heavy)
 
   (report results)
@@ -157,4 +157,4 @@
     {:results results :counts counts}))
 
 (defn reset []
-  (set top-group (group/new "<top>")))
+  (set top-section (section/new "<top>")))

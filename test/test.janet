@@ -1,17 +1,16 @@
 (import ../src/sofa :as t)
 
 (def things-ran @[])
-
 (defn assert-things-ran [things]
   (assert (deep= things-ran (array (splice things)))))
 
 ################################################################################
-# basic group
+# basic section
 ################################################################################
 (t/reset)
 (array/clear things-ran)
 
-(t/group
+(t/section
   "test/lib.janet works"
   (fn []
     (t/before (fn [] (array/push things-ran 'before)))
@@ -40,7 +39,7 @@
 (assert (= (counts :passed) 1))
 
 ################################################################################
-# implicit top-level group
+# implicit top-level section
 ################################################################################
 (t/reset)
 (array/clear things-ran)
