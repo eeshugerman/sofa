@@ -10,7 +10,8 @@
     :after nil
     :after-each nil})
 
-# seems we can't have a global dynamic binding
+# TODO: can/should we use a dyn for this too with defdyn?
+# https://github.com/janet-lang/spork/blob/master/spork/fmt.janet#L80
 (var top-section (section/new "<top>"))
 
 (defn- get-parent-section []
