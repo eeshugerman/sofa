@@ -1,6 +1,3 @@
-(import spork/path)
-(import spork/generators)
-
 (def divider-heavy "================================================================================")
 (def divider-light "--------------------------------------------------------------------------------")
 
@@ -144,6 +141,8 @@
 
 
 (defn run-tests [&keys {:exit-on-failure exit-on-failure}]
+  (default exit-on-failure true)
+
   (print divider-heavy)
   (print "Running tests...")
   (print divider-light)
@@ -152,12 +151,10 @@
 
   (report results)
 
-  (let
-    [is-repl (and (= "janet" (path/basename (dyn *executable*)))
-                  (all (fn [arg] (not= ".janet" (path/ext arg))) (dyn *args*)))
-     {:failed num-failed} (count-tests results)]
-    (when (and (> num-failed 0) exit-on-failure (not is-repl))
-      (os/exit 1))))
+  (let [counts (count-tests results)]
+    (when (and (> (counts :failed) 0) exit-on-failure)
+      (os/exit 1))
+    {:results results :counts counts}))
 
 (defn reset []
   (set top-group (group/new "<top>")))
