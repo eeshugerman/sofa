@@ -116,10 +116,14 @@
         (match child
           {:type 'test :passed true} acc
           {:type 'test :passed false} (array/push acc child)
-          {:type 'section} (array/push acc (filter-failures child))))
+          {:type 'section} (if-let [filtered-section (filter-failures child)]
+                             (array/push acc filtered-section)
+                             acc)))
       (array)
       (results :children)))
-  (merge results {:children filtered-children}))
+  (if (not (empty? filtered-children))
+    (merge results {:children filtered-children})
+    nil))
 
 
 (defn- print-failures [results &opt depth]
@@ -152,10 +156,11 @@
 
 
 (defn- report [results]
-  (print "FAILURES:")
-  (print divider-light)
-  (print-failures (filter-failures results))
-  (print divider-heavy)
+  (when-let [failures (filter-failures results)]
+    (print "FAILURES:")
+    (print divider-light)
+    (print-failures failures)
+    (print divider-heavy))
 
   (print "SUMMARY:")
   (print divider-light)
