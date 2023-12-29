@@ -54,7 +54,14 @@
      :name name
      :thunk thunk}))
 
-(defn- execute-test [test]
+
+(defn- get-indent [n]
+  (->> (range n)
+       (map (fn [x] "  "))
+       (string/join)))
+
+
+(defn- execute-test [test depth]
   # We need the fiber, not just the error it may throw, to get the pretty-printed
   # stacktrace later. The "err" value captured with the `try` macro is just the
   # error message. Well, we _could_ grab just the stack here, but then we'd have
@@ -68,20 +75,21 @@
         result (resume test-fiber)]
     (if (not= (fiber/status test-fiber) :error)
       (do
-        (printf "* %s ✅" name)
+        (printf "%s%s ✅" (get-indent depth) name)
         {:type 'test :name name :passed true})
       (do
-        (printf "* %s ❌" name)
+        (printf "%s%s ❌" (get-indent depth) name)
         {:type 'test
          :name name
          :passed false
          :fiber test-fiber
          :error-message result}))))
 
-(defn- execute-section [section]
+
+(defn- execute-section [section &opt depth]
+  (default depth 0)
   # TODO: catch errors in hooks?
-  # TODO: print output indentation
-  (print (section :name))
+  (print (get-indent depth) (section :name))
   (when-let [before (section :before)]
     (before))
   (def children-results
@@ -90,8 +98,8 @@
              (before-each))
            (def child-result
              (match child
-               {:type 'test} (execute-test child)
-               {:type 'section} (execute-section child)))
+               {:type 'test} (execute-test child (+ 1 depth))
+               {:type 'section} (execute-section child (+ 1 depth))))
            (when-let [after-each (section :after-each)]
              (after-each))
            child-result)
@@ -99,12 +107,6 @@
   (when-let [after (section :after)]
     (after))
   {:type 'section :name (section :name) :children children-results})
-
-
-(defn- get-spaces [n]
-  (->> (range n)
-       (map (fn [x] " "))
-       (string/join)))
 
 
 (defn- filter-failures [results]
@@ -120,17 +122,17 @@
   (merge results {:children filtered-children}))
 
 
-(defn- print-failures [results depth]
-  (def indent (get-spaces (* 2 depth)))
+(defn- print-failures [results &opt depth]
+  (default depth 0)
   (match results
     {:type 'section :name name :children children}
     (do
-      (print indent name)
+      (print (get-indent depth) name)
       (each child children
         (print-failures child (+ 1 depth))))
     {:type 'test :name name :fiber fiber :error-message message}
     (do
-      (print indent name)
+      (print (get-indent depth) name)
       (print message)
       (debug/stacktrace fiber)
       (print))))
@@ -152,7 +154,7 @@
 (defn- report [results]
   (print "FAILURES:")
   (print divider-light)
-  (print-failures (filter-failures results) 0)
+  (print-failures (filter-failures results))
   (print divider-heavy)
 
   (print "SUMMARY:")
