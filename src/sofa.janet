@@ -54,8 +54,7 @@
      :name name
      :thunk thunk}))
 
-
-(defn execute-section [section]
+(defn- execute-section [section]
   # TODO: catch errors in hooks?
   # TODO: print output indentation
   (print (section :name))
@@ -68,14 +67,26 @@
            (def child-result
              (match child
                {:type 'test :thunk thunk :name name}
-               (try
-                 (do
-                   (thunk)
-                   (printf "* %s ✅" name)
-                   {:type 'test :name name :passed true})
-                 ([err]
-                   (printf "* %s ❌" name)
-                   {:type 'test :name name :passed false :error err}))
+               # We need the fiber, not just the error it may throw, to get the pretty-printed
+               # stacktrace later. The "err" value captured with the `try` macro is just the
+               # error message. Well, we _could_ grab just the stack here, but then we'd have
+               # to render/pretty-print it by hand.
+               # https://janet-lang.org/docs/fibers/error_handling.html
+               # https://janet-lang.org/api/debug.html#debug/stack
+               # https://janet-lang.org/api/debug.html#debug/stacktrace
+               (let [test-fiber (fiber/new thunk :e)
+                     result (resume test-fiber)]
+                 (if (not= (fiber/status test-fiber) :error)
+                   (do
+                     (printf "* %s ✅" name)
+                     {:type 'test :name name :passed true})
+                   (do
+                     (printf "* %s ❌" name)
+                     {:type 'test
+                      :name name
+                      :passed false
+                      :fiber test-fiber
+                      :error-message result})))
                {:type 'section}
                (execute-section child)))
            (when-let [after-each (section :after-each)]
@@ -114,10 +125,11 @@
       (print indent name)
       (each child children
         (print-failures child (+ 1 depth))))
-    {:type 'test :name name :error err}
+    {:type 'test :name name :fiber fiber :error-message message}
     (do
       (print indent name)
-      (print err)
+      (print message)
+      (debug/stacktrace fiber)
       (print))))
 
 
