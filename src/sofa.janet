@@ -10,7 +10,7 @@
     :after nil
     :after-each nil})
 
-# TODO: default to filename (argv[1])
+# TODO: default to filename (argv[1]) or something?
 (def- top-section-name "<top>")
 
 (var- top-section (section/new top-section-name))
@@ -90,7 +90,10 @@
 
 (defn- execute-section [section &opt depth]
   (default depth 0)
-  # TODO: catch errors in hooks?
+  # TODO: catch errors in hooks
+  # TODO: propogate errors in hooks to results?
+  # TODO: skip remaining tests in section if hook fails? what does mocha do here?
+  # TODO: stack -each hooks for nested sections, like mocha
   (print (get-indent depth) (section :name))
   (when-let [before (section :before)]
     (before))
@@ -123,9 +126,9 @@
                              acc)))
       (array)
       (results :children)))
-  (if (not (empty? filtered-children))
-    (merge results {:children filtered-children})
-    nil))
+  (if (empty? filtered-children)
+    nil
+    (merge results {:children filtered-children})))
 
 
 (defn- print-failures [results &opt depth]
