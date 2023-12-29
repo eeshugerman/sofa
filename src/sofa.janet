@@ -1,9 +1,9 @@
 (def divider-heavy "================================================================================")
 (def divider-light "--------------------------------------------------------------------------------")
 
-(defn- section/new [description]
+(defn- section/new [name]
   @{:type 'section
-    :description description
+    :name name
     :children @[]
     :before nil
     :before-each nil
@@ -26,10 +26,10 @@
 (defn- get-parent-section []
   (or (dyn *section*) top-section))
 
-(defn section [description thunk]
+(defn section [name thunk]
   (def parent-section (get-parent-section))
   (def this-section
-    (with-dyns [*section* (section/new description)]
+    (with-dyns [*section* (section/new name)]
       (thunk)
       (dyn *section*)))
   (array/push (parent-section :children) this-section))
@@ -47,18 +47,18 @@
 (defn after-each [thunk]
   (set ((get-parent-section) :after-each) thunk))
 
-(defn test [description thunk]
+(defn test [name thunk]
   (array/push
     ((get-parent-section) :children)
     {:type 'test
-     :description description
+     :name name
      :thunk thunk}))
 
 
 (defn execute-section [section]
   # TODO: catch errors in hooks?
   # TODO: print output indentation
-  (print (section :description))
+  (print (section :name))
   (when-let [before (section :before)]
     (before))
   (def children-results
@@ -67,15 +67,15 @@
              (before-each))
            (def child-result
              (match child
-               {:type 'test :thunk thunk :description desc}
+               {:type 'test :thunk thunk :name name}
                (try
                  (do
                    (thunk)
-                   (printf "* %s ✅" desc)
-                   {:type 'test :description desc :passed true})
+                   (printf "* %s ✅" name)
+                   {:type 'test :name name :passed true})
                  ([err]
-                   (printf "* %s ❌" desc)
-                   {:type 'test :description desc :passed false :error err}))
+                   (printf "* %s ❌" name)
+                   {:type 'test :name name :passed false :error err}))
                {:type 'section}
                (execute-section child)))
            (when-let [after-each (section :after-each)]
@@ -84,7 +84,7 @@
          (section :children)))
   (when-let [after (section :after)]
     (after))
-  {:type 'section :description (section :description) :children children-results})
+  {:type 'section :name (section :name) :children children-results})
 
 
 (defn- get-spaces [n]
@@ -109,14 +109,14 @@
 (defn- print-failures [results depth]
   (def indent (get-spaces (* 2 depth)))
   (match results
-    {:type 'section :description desc :children children}
+    {:type 'section :name name :children children}
     (do
-      (print indent desc)
+      (print indent name)
       (each child children
         (print-failures child (+ 1 depth))))
-    {:type 'test :description desc :error err}
+    {:type 'test :name name :error err}
     (do
-      (print indent desc)
+      (print indent name)
       (print err)
       (print))))
 
