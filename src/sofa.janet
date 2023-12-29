@@ -128,14 +128,13 @@
         {:type 'test :passed true} (merge acc {:passed (+ 1 (acc :passed))})
         {:type 'test :passed false} (merge acc {:failed (+ 1 (acc :failed))})
         {:type 'section} (let [counts (count-tests child)]
-                         {:passed (+ (acc :passed) (counts :passed))
-                          :failed (+ (acc :failed) (counts :failed))})))
+                           {:passed (+ (acc :passed) (counts :passed))
+                            :failed (+ (acc :failed) (counts :failed))})))
     {:passed 0 :failed 0}
     (results :children)))
 
 
 (defn- report [results]
-  # TODO: elide implicit top section
   (print "FAILURES:")
   (print divider-light)
   (print-failures (filter-failures results) 0)
