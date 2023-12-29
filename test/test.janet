@@ -41,7 +41,7 @@
 (t/after (fn [] (array/push things-ran 'after)))
 (t/after-each (fn [] (array/push things-ran 'after-each)))
 
-(let [{:results results :counts counts } (t/run-tests :exit-on-failure false)]
+(let [{:counts counts} (t/run-tests :exit-on-failure false)]
   (assert-things-ran
    '(before
      before-each passing-test after-each
@@ -74,7 +74,7 @@
     (t/after (fn [] (array/push things-ran 'after)))
     (t/after-each (fn [] (array/push things-ran 'after-each)))))
 
-(let [{:results results :counts counts } (t/run-tests :exit-on-failure false)]
+(let [{:counts counts} (t/run-tests :exit-on-failure false)]
   (assert-things-ran
    '(before
      before-each passing-test after-each
@@ -126,7 +126,7 @@
     (t/after (fn [] (array/push things-ran 'after-b)))
     (t/after-each (fn [] (array/push things-ran 'after-each-b)))))
 
-(let [{:results results :counts counts } (t/run-tests :exit-on-failure false)]
+(let [{:counts counts} (t/run-tests :exit-on-failure false)]
   (assert-things-ran
    '(before-a
      before-each-a test-a-1 after-each-a
