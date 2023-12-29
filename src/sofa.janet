@@ -10,19 +10,28 @@
     :after nil
     :after-each nil})
 
-# TODO: can/should we use a dyn for this too with defdyn?
-# https://github.com/janet-lang/spork/blob/master/spork/fmt.janet#L80
-(var top-section (section/new "<top>"))
+# TODO: default to filename (argv[1])
+(def top-section-name "<top>")
+
+(var top-section (section/new top-section-name))
+
+# All this does is make (dyn *section*) not throw "unknown symbol *section*".
+# We still can't use *section* as a global -- we'll need a regular binding
+# (`top-section`) for that.
+(defdyn *section*)
+
+(defn reset []
+  (set top-section (section/new top-section-name)))
 
 (defn- get-parent-section []
-  (or (dyn :section) top-section))
+  (or (dyn *section*) top-section))
 
 (defn section [description thunk]
   (def parent-section (get-parent-section))
   (def this-section
-    (with-dyns [:section (section/new description)]
+    (with-dyns [*section* (section/new description)]
       (thunk)
-      (dyn :section)))
+      (dyn *section*)))
   (array/push (parent-section :children) this-section))
 
 (defn before [thunk]
@@ -157,6 +166,3 @@
     (when (and (> (counts :failed) 0) exit-on-failure)
       (os/exit 1))
     {:results results :counts counts}))
-
-(defn reset []
-  (set top-section (section/new "<top>")))
