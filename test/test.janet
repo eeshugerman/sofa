@@ -43,10 +43,10 @@
 
 (let [{:counts counts} (t/run-tests :exit-on-failure false)]
   (assert-things-ran
-   '(before
-     before-each passing-test after-each
-     before-each failing-test after-each
-     after))
+    '[before
+      before-each passing-test after-each
+      before-each failing-test after-each
+      after])
   (assert (= (counts :failed) 1))
   (assert (= (counts :passed) 1)))
 
@@ -76,10 +76,10 @@
 
 (let [{:counts counts} (t/run-tests :exit-on-failure false)]
   (assert-things-ran
-   '(before
-     before-each passing-test after-each
-     before-each failing-test after-each
-     after))
+    '[before
+      before-each passing-test after-each
+      before-each failing-test after-each
+      after])
   (assert (= (counts :failed) 1))
   (assert (= (counts :passed) 1)))
 
@@ -91,22 +91,22 @@
 (array/clear things-ran)
 
 (t/section
- "section a"
- (fn []
-   (t/before (fn [] (array/push things-ran 'before-a)))
-   (t/before-each (fn [] (array/push things-ran 'before-each-a)))
-   (t/test
-    "this should pass (1/2)"
-    (fn []
-      (array/push things-ran 'test-a-1)
-      (assert true)))
-   (t/test
-    "this should pass (1/2)"
-    (fn []
-      (array/push things-ran 'test-a-2)
-      (assert true)))
-   (t/after (fn [] (array/push things-ran 'after-a)))
-   (t/after-each (fn [] (array/push things-ran 'after-each-a)))))
+  "section a"
+  (fn []
+    (t/before (fn [] (array/push things-ran 'before-a)))
+    (t/before-each (fn [] (array/push things-ran 'before-each-a)))
+    (t/test
+      "this should pass (1/2)"
+      (fn []
+        (array/push things-ran 'test-a-1)
+        (assert true)))
+    (t/test
+      "this should pass (1/2)"
+      (fn []
+        (array/push things-ran 'test-a-2)
+        (assert true)))
+    (t/after (fn [] (array/push things-ran 'after-a)))
+    (t/after-each (fn [] (array/push things-ran 'after-each-a)))))
 
 (t/section
   "section b"
@@ -128,18 +128,19 @@
 
 (let [{:counts counts} (t/run-tests :exit-on-failure false)]
   (assert-things-ran
-   '(before-a
-     before-each-a test-a-1 after-each-a
-     before-each-a test-a-2 after-each-a
-     after-a
+    '[before-a
+      before-each-a test-a-1 after-each-a
+      before-each-a test-a-2 after-each-a
+      after-a
 
-     before-b
-     before-each-b test-b-1 after-each-b
-     before-each-b test-b-2 after-each-b
-     after-b))
+      before-b
+      before-each-b test-b-1 after-each-b
+      before-each-b test-b-2 after-each-b
+      after-b])
 
   (assert (= (counts :failed) 2))
   (assert (= (counts :passed) 2)))
+
 
 ################################################################################
 # TODO: nested sections (also change behavior to match mocha)
@@ -148,3 +149,4 @@
 ################################################################################
 # TODO: os/exit is called (spawn process to assert this)
 ################################################################################
+
