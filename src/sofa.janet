@@ -11,9 +11,9 @@
     :after-each nil})
 
 # TODO: default to filename (argv[1])
-(def top-section-name "<top>")
+(def- top-section-name "<top>")
 
-(var top-section (section/new top-section-name))
+(var- top-section (section/new top-section-name))
 
 # All this does is make (dyn *section*) not throw "unknown symbol *section*".
 # We still can't use *section* as a global -- we'll need a regular binding
@@ -32,7 +32,8 @@
     (with-dyns [*section* (section/new name)]
       (thunk)
       (dyn *section*)))
-  (array/push (parent-section :children) this-section))
+  (array/push (parent-section :children) this-section)
+  nil)
 
 (defn before [thunk]
   # TODO: throw if already set
@@ -52,7 +53,8 @@
     ((get-parent-section) :children)
     {:type 'test
      :name name
-     :thunk thunk}))
+     :thunk thunk})
+  nil)
 
 
 (defn- get-indent [n]
