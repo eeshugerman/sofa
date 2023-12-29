@@ -5,6 +5,22 @@
   (assert (deep= things-ran (array (splice things)))))
 
 ################################################################################
+# simple passing case
+################################################################################
+(t/reset)
+(array/clear things-ran)
+
+(t/test
+  "this should pass"
+  (fn []
+    (array/push things-ran 'passing-test)
+    (assert true)))
+
+(let [{:counts counts} (t/run-tests :exit-on-failure false)]
+  (assert-things-ran '(passing-test))
+  (assert (= (counts :passed) 1)))
+
+################################################################################
 # implicit top-level section
 ################################################################################
 (t/reset)
