@@ -15,13 +15,13 @@
 
 (var- top-section (section/new top-section-name))
 
+(defn reset []
+  (set top-section (section/new top-section-name)))
+
 # All this does is make (dyn *section*) not throw "unknown symbol *section*".
 # We still can't use *section* as a global -- we'll need a regular binding
 # (`top-section`) for that.
 (defdyn *section*)
-
-(defn reset []
-  (set top-section (section/new top-section-name)))
 
 (defn- get-parent-section []
   (or (dyn *section*) top-section))
@@ -88,29 +88,49 @@
          :error-message result}))))
 
 
-(defn- execute-section [section &opt depth]
+# TODO: catch errors in hooks? and propogate errors in hooks to results?
+# TODO: skip remaining tests in section if hook fails? what does mocha do here?
+(defn- execute-section
+  [section &keys {:depth depth
+                  :inherited-before-each-hooks inherited-before-each-hooks
+                  :inherited-after-each-hooks inherited-after-each-hooks}]
   (default depth 0)
-  # TODO: catch errors in hooks
-  # TODO: propogate errors in hooks to results?
-  # TODO: skip remaining tests in section if hook fails? what does mocha do here?
-  # TODO: stack -each hooks for nested sections, like mocha
+  (default inherited-before-each-hooks [])
+  (default inherited-after-each-hooks [])
+
   (print (get-indent depth) (section :name))
+
   (when-let [before (section :before)]
     (before))
+
   (def children-results
-    (map (fn [child]
-           (when-let [before-each (section :before-each)]
-             (before-each))
-           (def child-result
-             (match child
-               {:type 'test} (execute-test child (+ 1 depth))
-               {:type 'section} (execute-section child (+ 1 depth))))
-           (when-let [after-each (section :after-each)]
-             (after-each))
-           child-result)
-         (section :children)))
+    (let [before-each-hooks
+          (if-let [own-hook (section :before-each)]
+            [(splice inherited-before-each-hooks) own-hook]
+            inherited-before-each-hooks)
+          after-each-hooks
+          (if-let [own-hook (section :after-each)]
+            [own-hook (splice inherited-after-each-hooks)]
+            inherited-after-each-hooks)]
+      (map
+        (fn [child]
+          (match child
+            {:type 'test}
+            (do
+              (each hook before-each-hooks (hook))
+              (def child-result (execute-test child (+ 1 depth)))
+              (each hook after-each-hooks (hook))
+              child-result)
+            {:type 'section}
+            (execute-section child
+              :depth (+ 1 depth)
+              :inherited-before-each-hooks before-each-hooks
+              :inherited-after-each-hooks after-each-hooks)))
+        (section :children))))
+
   (when-let [after (section :after)]
     (after))
+
   {:type 'section :name (section :name) :children children-results})
 
 

@@ -2,6 +2,7 @@
 
 (def things-ran @[])
 (defn assert-things-ran [things]
+
   (assert (deep= things-ran (array (splice things)))))
 
 ################################################################################
@@ -83,7 +84,6 @@
   (assert (= (counts :failed) 1))
   (assert (= (counts :passed) 1)))
 
-
 ################################################################################
 # multiple sections
 ################################################################################
@@ -141,7 +141,6 @@
   (assert (= (counts :failed) 2))
   (assert (= (counts :passed) 2)))
 
-
 ################################################################################
 # nested sections (TODO: change behavior to match mocha)
 ################################################################################
@@ -194,18 +193,21 @@
       outer-test-1
       outer-after-each
 
-      outer-before-each
-
       inner-before
+
+      outer-before-each
       inner-before-each
       inner-test-1
       inner-after-each
+      outer-after-each
+
+      outer-before-each
       inner-before-each
       inner-test-2
       inner-after-each
-      inner-after
-
       outer-after-each
+
+      inner-after
 
       outer-before-each
       outer-test-2
@@ -215,7 +217,6 @@
 
   (assert (= (counts :failed) 2))
   (assert (= (counts :passed) 2)))
-
 
 ################################################################################
 # TODO: os/exit is called (spawn process to assert this)
