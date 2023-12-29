@@ -54,6 +54,30 @@
      :name name
      :thunk thunk}))
 
+(defn- execute-test [test]
+  # We need the fiber, not just the error it may throw, to get the pretty-printed
+  # stacktrace later. The "err" value captured with the `try` macro is just the
+  # error message. Well, we _could_ grab just the stack here, but then we'd have
+  # to render/pretty-print it by hand. Still we _could_ call override (dyn :out)
+  # here, but meh might as just pass the fiber around.
+  # https://janet-lang.org/docs/fibers/error_handling.html
+  # https://janet-lang.org/api/debug.html#debug/stack
+  # https://janet-lang.org/api/debug.html#debug/stacktrace
+  (let [{:thunk thunk :name name} test
+        test-fiber (fiber/new thunk :e)
+        result (resume test-fiber)]
+    (if (not= (fiber/status test-fiber) :error)
+      (do
+        (printf "* %s ✅" name)
+        {:type 'test :name name :passed true})
+      (do
+        (printf "* %s ❌" name)
+        {:type 'test
+         :name name
+         :passed false
+         :fiber test-fiber
+         :error-message result}))))
+
 (defn- execute-section [section]
   # TODO: catch errors in hooks?
   # TODO: print output indentation
@@ -66,29 +90,8 @@
              (before-each))
            (def child-result
              (match child
-               {:type 'test :thunk thunk :name name}
-               # We need the fiber, not just the error it may throw, to get the pretty-printed
-               # stacktrace later. The "err" value captured with the `try` macro is just the
-               # error message. Well, we _could_ grab just the stack here, but then we'd have
-               # to render/pretty-print it by hand.
-               # https://janet-lang.org/docs/fibers/error_handling.html
-               # https://janet-lang.org/api/debug.html#debug/stack
-               # https://janet-lang.org/api/debug.html#debug/stacktrace
-               (let [test-fiber (fiber/new thunk :e)
-                     result (resume test-fiber)]
-                 (if (not= (fiber/status test-fiber) :error)
-                   (do
-                     (printf "* %s ✅" name)
-                     {:type 'test :name name :passed true})
-                   (do
-                     (printf "* %s ❌" name)
-                     {:type 'test
-                      :name name
-                      :passed false
-                      :fiber test-fiber
-                      :error-message result})))
-               {:type 'section}
-               (execute-section child)))
+               {:type 'test} (execute-test child)
+               {:type 'section} (execute-section child)))
            (when-let [after-each (section :after-each)]
              (after-each))
            child-result)
