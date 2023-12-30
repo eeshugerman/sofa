@@ -58,8 +58,8 @@
 
 
 (defn- get-indent [n]
-  (->> (range n)
-       (map (fn [x] "  "))
+  (->> (range (+ 1 n))
+       (map (fn [x] "* "))
        (string/join)))
 
 
@@ -77,10 +77,10 @@
         result (resume test-fiber)]
     (if (not= (fiber/status test-fiber) :error)
       (do
-        (printf "%s%s ✅" (get-indent depth) name)
+        (print (get-indent depth) "✅ " name)
         {:type 'test :name name :passed true})
       (do
-        (printf "%s%s ❌" (get-indent depth) name)
+        (print (get-indent depth) "❌ " name)
         {:type 'test
          :name name
          :passed false
