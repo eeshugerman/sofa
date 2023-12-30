@@ -1,4 +1,7 @@
-(import ../src/sofa :as t)
+(import ../src :as t)
+
+# TODO:
+# - asserts on printed output (or something along those lines)
 
 (def things-ran @[])
 (defn assert-things-ran [things]
@@ -11,11 +14,9 @@
 (t/reset)
 (array/clear things-ran)
 
-(t/test
-  "this should pass"
-  (fn []
-    (array/push things-ran 'passing-test)
-    (assert true)))
+(t/test "this should pass"
+  (array/push things-ran 'passing-test)
+  (assert true))
 
 (let [{:counts counts} (t/run-tests :exit-on-failure false)]
   (assert-things-ran '(passing-test))
@@ -27,20 +28,16 @@
 (t/reset)
 (array/clear things-ran)
 
-(t/before (fn [] (array/push things-ran 'before)))
-(t/before-each (fn [] (array/push things-ran 'before-each)))
-(t/test
-  "this should pass"
-  (fn []
-    (array/push things-ran 'passing-test)
-    (assert true)))
-(t/test
-  "this should fail"
-  (fn []
-    (array/push things-ran 'failing-test)
-    (assert false)))
-(t/after (fn [] (array/push things-ran 'after)))
-(t/after-each (fn [] (array/push things-ran 'after-each)))
+(t/before (array/push things-ran 'before))
+(t/before-each (array/push things-ran 'before-each))
+(t/test "this should pass"
+  (array/push things-ran 'passing-test)
+  (assert true))
+(t/test "this should fail"
+  (array/push things-ran 'failing-test)
+  (assert false))
+(t/after (array/push things-ran 'after))
+(t/after-each (array/push things-ran 'after-each))
 
 (let [{:counts counts} (t/run-tests :exit-on-failure false)]
   (assert-things-ran
@@ -57,23 +54,17 @@
 (t/reset)
 (array/clear things-ran)
 
-(t/section
-  "basic section"
-  (fn []
-    (t/before (fn [] (array/push things-ran 'before)))
-    (t/before-each (fn [] (array/push things-ran 'before-each)))
-    (t/test
-      "this should pass"
-      (fn []
-        (array/push things-ran 'passing-test)
-        (assert true)))
-    (t/test
-      "this should fail"
-      (fn []
-        (array/push things-ran 'failing-test)
-        (assert false)))
-    (t/after (fn [] (array/push things-ran 'after)))
-    (t/after-each (fn [] (array/push things-ran 'after-each)))))
+(t/section "basic section"
+  (t/before (array/push things-ran 'before))
+  (t/before-each (array/push things-ran 'before-each))
+  (t/test "this should pass"
+    (array/push things-ran 'passing-test)
+    (assert true))
+  (t/test "this should fail"
+    (array/push things-ran 'failing-test)
+    (assert false))
+  (t/after (array/push things-ran 'after))
+  (t/after-each (array/push things-ran 'after-each)))
 
 (let [{:counts counts} (t/run-tests :exit-on-failure false)]
   (assert-things-ran
@@ -90,41 +81,29 @@
 (t/reset)
 (array/clear things-ran)
 
-(t/section
-  "section a"
-  (fn []
-    (t/before (fn [] (array/push things-ran 'before-a)))
-    (t/before-each (fn [] (array/push things-ran 'before-each-a)))
-    (t/test
-      "this should pass (1/2)"
-      (fn []
-        (array/push things-ran 'test-a-1)
-        (assert true)))
-    (t/test
-      "this should pass (1/2)"
-      (fn []
-        (array/push things-ran 'test-a-2)
-        (assert true)))
-    (t/after (fn [] (array/push things-ran 'after-a)))
-    (t/after-each (fn [] (array/push things-ran 'after-each-a)))))
+(t/section "section a"
+  (t/before (array/push things-ran 'before-a))
+  (t/before-each (array/push things-ran 'before-each-a))
+  (t/test "this should pass (1/2)"
+    (array/push things-ran 'test-a-1)
+    (assert true))
+  (t/test "this should pass (1/2)"
+    (array/push things-ran 'test-a-2)
+    (assert true))
+  (t/after (array/push things-ran 'after-a))
+  (t/after-each (array/push things-ran 'after-each-a)))
 
-(t/section
-  "section b"
-  (fn []
-    (t/before (fn [] (array/push things-ran 'before-b)))
-    (t/before-each (fn [] (array/push things-ran 'before-each-b)))
-    (t/test
-      "this should fail (1/2)"
-      (fn []
-        (array/push things-ran 'test-b-1)
-        (assert false)))
-    (t/test
-      "this should fail (2/2)"
-      (fn []
-        (array/push things-ran 'test-b-2)
-        (assert false)))
-    (t/after (fn [] (array/push things-ran 'after-b)))
-    (t/after-each (fn [] (array/push things-ran 'after-each-b)))))
+(t/section "section b"
+  (t/before (array/push things-ran 'before-b))
+  (t/before-each (array/push things-ran 'before-each-b))
+  (t/test "this should fail (1/2)"
+    (array/push things-ran 'test-b-1)
+    (assert false))
+  (t/test "this should fail (2/2)"
+    (array/push things-ran 'test-b-2)
+    (assert false))
+  (t/after (array/push things-ran 'after-b))
+  (t/after-each (array/push things-ran 'after-each-b)))
 
 (let [{:counts counts} (t/run-tests :exit-on-failure false)]
   (assert-things-ran
@@ -147,43 +126,32 @@
 (t/reset)
 (array/clear things-ran)
 
-(t/section
-  "outer section"
-  (fn []
-    (t/before (fn [] (array/push things-ran 'outer-before)))
-    (t/before-each (fn [] (array/push things-ran 'outer-before-each)))
-    (t/after (fn [] (array/push things-ran 'outer-after)))
-    (t/after-each (fn [] (array/push things-ran 'outer-after-each)))
+(t/section "outer section"
+  (t/before (array/push things-ran 'outer-before))
+  (t/before-each (array/push things-ran 'outer-before-each))
+  (t/after (array/push things-ran 'outer-after))
+  (t/after-each (array/push things-ran 'outer-after-each))
 
-    (t/test
-     "outer test (fail)"
-     (fn []
-       (array/push things-ran 'outer-test-1)
-       (assert false)))
+  (t/test "outer test (fail)"
+    (array/push things-ran 'outer-test-1)
+    (assert false))
 
-    (t/section
-      "inner section"
-      (fn []
-        (t/before (fn [] (array/push things-ran 'inner-before)))
-        (t/before-each (fn [] (array/push things-ran 'inner-before-each)))
-        (t/after (fn [] (array/push things-ran 'inner-after)))
-        (t/after-each (fn [] (array/push things-ran 'inner-after-each)))
-        (t/test
-          "inner test (fail)"
-          (fn []
-            (array/push things-ran 'inner-test-1)
-            (assert false)))
-        (t/test
-          "inner test (pass)"
-          (fn []
-            (array/push things-ran 'inner-test-2)
-            (assert true)))))
+  (t/section "inner section"
+    (t/before (array/push things-ran 'inner-before))
+    (t/before-each (array/push things-ran 'inner-before-each))
+    (t/after (array/push things-ran 'inner-after))
+    (t/after-each (array/push things-ran 'inner-after-each))
 
-    (t/test
-      "outer test (pass)"
-      (fn []
-        (array/push things-ran 'outer-test-2)
-        (assert true)))))
+    (t/test "inner test (fail)"
+      (array/push things-ran 'inner-test-1)
+      (assert false))
+    (t/test "inner test (pass)"
+      (array/push things-ran 'inner-test-2)
+      (assert true)))
+
+  (t/test "outer test (pass)"
+    (array/push things-ran 'outer-test-2)
+    (assert true)))
 
 (let [{:counts counts} (t/run-tests :exit-on-failure false)]
   (assert-things-ran

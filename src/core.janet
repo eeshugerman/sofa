@@ -26,7 +26,7 @@
 (defn- get-parent-section []
   (or (dyn *section*) top-section))
 
-(defn section [name thunk]
+(defn section* [name thunk]
   (def parent-section (get-parent-section))
   (def this-section
     (with-dyns [*section* (section/new name)]
@@ -35,20 +35,20 @@
   (array/push (parent-section :children) this-section)
   nil)
 
-(defn before [thunk]
+(defn before* [thunk]
   # TODO: throw if already set
   (set ((get-parent-section) :before) thunk))
 
-(defn before-each [thunk]
+(defn before-each* [thunk]
   (set ((get-parent-section) :before-each) thunk))
 
-(defn after [thunk]
+(defn after* [thunk]
   (set ((get-parent-section) :after) thunk))
 
-(defn after-each [thunk]
+(defn after-each* [thunk]
   (set ((get-parent-section) :after-each) thunk))
 
-(defn test [name thunk]
+(defn test* [name thunk]
   (array/push
     ((get-parent-section) :children)
     {:type 'test
