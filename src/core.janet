@@ -10,8 +10,8 @@
     :after nil
     :after-each nil})
 
-# TODO: default to filename (argv[1]) or something?
-(def- top-section-name "<top>")
+# not great but good enough
+(def- top-section-name (or (last (dyn *args*)) "<top>"))
 
 (var- top-section (section/new top-section-name))
 
