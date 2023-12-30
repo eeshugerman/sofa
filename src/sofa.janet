@@ -105,13 +105,13 @@
 
   (def children-results
     (let [before-each-hooks
-          (if-let [own-hook (section :before-each)]
-            [(splice inherited-before-each-hooks) own-hook]
-            inherited-before-each-hooks)
+          (let [own (section :before-each)
+                inherited inherited-before-each-hooks]
+            (if own [(splice inherited) own] inherited))
           after-each-hooks
-          (if-let [own-hook (section :after-each)]
-            [own-hook (splice inherited-after-each-hooks)]
-            inherited-after-each-hooks)]
+          (let [own (section :after-each)
+                inherited inherited-after-each-hooks]
+            (if own [own (splice inherited)] inherited))]
       (map
         (fn [child]
           (match child
@@ -122,7 +122,8 @@
               (each hook after-each-hooks (hook))
               child-result)
             {:type 'section}
-            (execute-section child
+            (execute-section
+              child
               :depth (+ 1 depth)
               :inherited-before-each-hooks before-each-hooks
               :inherited-after-each-hooks after-each-hooks)))
