@@ -5,7 +5,6 @@
 
 (def things-ran @[])
 (defn assert-things-ran [things]
-
   (assert (deep= things-ran (array (splice things)))))
 
 ################################################################################
@@ -40,13 +39,13 @@
 (t/after-each (array/push things-ran 'after-each))
 
 (let [{:counts counts} (t/run-tests :exit-on-failure false)]
-  (assert-things-ran
-    '[before
-      before-each passing-test after-each
-      before-each failing-test after-each
-      after])
   (assert (= (counts :failed) 1))
   (assert (= (counts :passed) 1)))
+(assert-things-ran
+  '[before
+    before-each passing-test after-each
+    before-each failing-test after-each
+    after])
 
 ################################################################################
 # explicit section
@@ -67,13 +66,13 @@
   (t/after-each (array/push things-ran 'after-each)))
 
 (let [{:counts counts} (t/run-tests :exit-on-failure false)]
-  (assert-things-ran
-    '[before
-      before-each passing-test after-each
-      before-each failing-test after-each
-      after])
   (assert (= (counts :failed) 1))
   (assert (= (counts :passed) 1)))
+(assert-things-ran
+  '[before
+    before-each passing-test after-each
+    before-each failing-test after-each
+    after])
 
 ################################################################################
 # multiple sections
@@ -106,19 +105,18 @@
   (t/after-each (array/push things-ran 'after-each-b)))
 
 (let [{:counts counts} (t/run-tests :exit-on-failure false)]
-  (assert-things-ran
-    '[before-a
-      before-each-a test-a-1 after-each-a
-      before-each-a test-a-2 after-each-a
-      after-a
-
-      before-b
-      before-each-b test-b-1 after-each-b
-      before-each-b test-b-2 after-each-b
-      after-b])
-
   (assert (= (counts :failed) 2))
   (assert (= (counts :passed) 2)))
+(assert-things-ran
+  '[before-a
+    before-each-a test-a-1 after-each-a
+    before-each-a test-a-2 after-each-a
+    after-a
+
+    before-b
+    before-each-b test-b-1 after-each-b
+    before-each-b test-b-2 after-each-b
+    after-b])
 
 ################################################################################
 # nested sections (TODO: change behavior to match mocha)
@@ -154,37 +152,36 @@
     (assert true)))
 
 (let [{:counts counts} (t/run-tests :exit-on-failure false)]
-  (assert-things-ran
-    '[outer-before
-
-      outer-before-each
-      outer-test-1
-      outer-after-each
-
-      inner-before
-
-      outer-before-each
-      inner-before-each
-      inner-test-1
-      inner-after-each
-      outer-after-each
-
-      outer-before-each
-      inner-before-each
-      inner-test-2
-      inner-after-each
-      outer-after-each
-
-      inner-after
-
-      outer-before-each
-      outer-test-2
-      outer-after-each
-
-      outer-after])
-
   (assert (= (counts :failed) 2))
   (assert (= (counts :passed) 2)))
+(assert-things-ran
+  '[outer-before
+
+    outer-before-each
+    outer-test-1
+    outer-after-each
+
+    inner-before
+
+    outer-before-each
+    inner-before-each
+    inner-test-1
+    inner-after-each
+    outer-after-each
+
+    outer-before-each
+    inner-before-each
+    inner-test-2
+    inner-after-each
+    outer-after-each
+
+    inner-after
+
+    outer-before-each
+    outer-test-2
+    outer-after-each
+
+    outer-after])
 
 ################################################################################
 # TODO: os/exit is called (spawn process to assert this)

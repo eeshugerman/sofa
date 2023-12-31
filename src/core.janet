@@ -1,5 +1,5 @@
-(def divider-heavy "================================================================================")
-(def divider-light "--------------------------------------------------------------------------------")
+(def- divider-heavy "================================================================================")
+(def- divider-light "--------------------------------------------------------------------------------")
 
 (defn- section/new [name]
   @{:type 'section
@@ -58,8 +58,8 @@
 
 
 (defn- get-indent [n]
-  (->> (range (+ 1 n))
-       (map (fn [x] "* "))
+  (->> (range n)
+       (map (fn [x] "· "))
        (string/join)))
 
 
@@ -77,10 +77,10 @@
         result (resume test-fiber)]
     (if (not= (fiber/status test-fiber) :error)
       (do
-        (print (get-indent depth) "✅ " name)
+        (print (get-indent depth) "✓ " name)
         {:type 'test :name name :passed true})
       (do
-        (print (get-indent depth) "❌ " name)
+        (print (get-indent depth) "✗ " name)
         {:type 'test
          :name name
          :passed false
